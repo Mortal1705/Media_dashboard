@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Media Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0A0D14',
+                        'glass-bg': 'rgba(20, 26, 38, 0.65)',
+                        'neon-cyan': '#00F0FF',
+                        'neon-purple': '#D042FF',
+                        'accent-blue': '#2A75FF',
+                        'text-primary': '#FFFFFF',
+                        'text-secondary': '#8A99AD',
+                    },
+                    fontFamily: {
+                        'cyber': ['Orbitron', 'monospace'],
+                        'inter': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* ========================================
+           DARK FUTURISTIC NEON GLASSMORPHISM THEME
+           ======================================== */
+        
+        body {
+            background-color: #0A0D14;
+            color: #FFFFFF;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(208, 66, 255, 0.08) 0%, transparent 50%),
+                linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            background-position: 0 0, 0 0, 0 0, 0 0;
+        }
+        
+        /* Force white color for Chart.js legend text */
+        .chartjs-legend,
+        .chartjs-legend-text,
+        canvas + div,
+        #chart-type + *,
+        .chart-legend,
+        [class*="legend"] {
+            color: #ffffff !important;
+        }
+        
+        /* ========================================
+           GLASSMORPHISM CARD SYSTEM
+           ======================================== */
+        
+        .glass-panel {
+            background: rgba(20, 26, 38, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-panel:hover {
+            border-color: rgba(0, 240, 255, 0.8);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* ========================================
+           GRADIENT TEXT EFFECT
+           ======================================== */
+        
+        .neon-gradient-text {
+            background: linear-gradient(135deg, #00F0FF 0%, #D042FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .neon-glow {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+        }
+        
+        /* ========================================
+           TAB NAVIGATION
+           ======================================== */
+        
+        .tab-active {
+            background: linear-gradient(135deg, #00F0FF 0%, #D042FF 100%);
+            color: #0A0D14;
+            font-weight: 700;
+            border: 2px solid transparent;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.6), 0 0 50px rgba(208, 66, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-active::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .tab-inactive {
+            background: rgba(20, 26, 38, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: #00F0FF;
+        }
+        
+        .tab-inactive:hover {
+            border-color: rgba(208, 66, 255, 0.6);
+            box-shadow: 0 0 20px rgba(208, 66, 255, 0.3);
+            color: #D042FF;
+            background: rgba(20, 26, 38, 0.7);
+        }
+        
+        /* ========================================
+           BUTTON STYLES WITH NEON GLOW
+           ======================================== */
+        
+        .cyber-button {
+            background: linear-gradient(135deg, #D042FF 0%, #2A75FF 100%);
+            color: #FFFFFF;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 20px rgba(208, 66, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cyber-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .cyber-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .cyber-button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 40px rgba(208, 66, 255, 0.6), 0 0 60px rgba(0, 240, 255, 0.4);
+            border-color: rgba(0, 240, 255, 0.8);
+        }
+        
+        /* ========================================
+           INPUT & SELECT STYLES
+           ======================================== */
+        
+        .cyber-input, .cyber-select {
+            background: rgba(20, 26, 38, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 8px;
+            color: #FFFFFF;
+            transition: all 0.3s ease;
+        }
+        
+        .cyber-input:focus, .cyber-select:focus {
+            border-color: #00F0FF;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            outline: none;
+            background: rgba(20, 26, 38, 0.95);
+        }
+        
+        .cyber-input::placeholder {
+            color: #8A99AD;
+        }
+        
+        /* ========================================
+           LOADING SPINNER
+           ======================================== */
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 240, 255, 0.2);
+            border-top: 4px solid #00F0FF;
+            border-right: 4px solid #D042FF;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* ========================================
+           TABLE STYLES
+           ======================================== */
+        
+        .cyber-table {
+            background: rgba(20, 26, 38, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .cyber-table th {
+            background: rgba(0, 240, 255, 0.15);
+            color: #00F0FF;
+            border-bottom: 2px solid rgba(0, 240, 255, 0.4);
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 0 10px #00F0FF;
+        }
+        
+        .cyber-table td {
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+            color: #FFFFFF;
+        }
+        
+        .cyber-table tr:hover {
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+        
+        /* ========================================
+           KPI CARD
+           ======================================== */
+        
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(20, 26, 38, 0.8), rgba(0, 240, 255, 0.1));
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 240, 255, 0.4);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 40px rgba(0, 240, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .kpi-number {
+            background: linear-gradient(135deg, #00F0FF 0%, #D042FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.8));
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { 
+                filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.6));
+            }
+            100% { 
+                filter: drop-shadow(0 0 40px rgba(0, 240, 255, 1)) 
+                        drop-shadow(0 0 60px rgba(208, 66, 255, 0.8));
+            }
+        }
+        
+        /* ========================================
+           ACTOR PROFILE CARD
+           ======================================== */
+        
+        .actor-profile-card {
+            background: linear-gradient(135deg, rgba(20, 26, 38, 0.8), rgba(208, 66, 255, 0.15));
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(208, 66, 255, 0.5);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 40px rgba(208, 66, 255, 0.4);
+        }
+        
+        /* ========================================
+           HEADER ENHANCEMENTS
+           ======================================== */
+        
+        header {
+            background: linear-gradient(180deg, rgba(20, 26, 38, 0.8) 0%, rgba(10, 13, 20, 0) 100%);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+        }
+        
+        /* ========================================
+           BADGE & TAG STYLES
+           ======================================== */
+        
+        .neon-badge {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #00F0FF;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+        }
+        
+        /* ========================================
+           SCROLLBAR STYLING
+           ======================================== */
+        
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 26, 38, 0.5);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00F0FF 0%, #D042FF 100%);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #D042FF 0%, #2A75FF 100%);
+        }
+    </style>
+</head>
+<body class="text-white overflow-x-hidden">
+    <!-- Animated Header -->
+    <header class="p-8 relative">
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-neon-cyan/5 to-transparent"></div>
+        <div class="container mx-auto text-center relative z-10">
+            <h1 class="text-6xl font-cyber font-black neon-gradient-text mb-3">
+                ⚡ Media Dashboard ⚡
+            </h1>
+            <p class="text-neon-purple/90 font-bold tracking-widest uppercase text-lg">
+                >>Thanh Phong<<
+            </p>
+            <div class="mt-4 flex justify-center space-x-2">
+                <div class="w-3 h-3 bg-neon-cyan rounded-full animate-ping"></div>
+                <div class="w-3 h-3 bg-neon-purple rounded-full animate-ping" style="animation-delay: 0.2s;"></div>
+                <div class="w-3 h-3 bg-accent-blue rounded-full animate-ping" style="animation-delay: 0.4s;"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="flex justify-center space-x-8 mb-12">
+            <button id="tab-overview" class="tab-active px-10 py-4 rounded-lg font-cyber text-base tracking-wider transition-all duration-300 uppercase">
+                🔥 SYSTEM OVERVIEW
+            </button>
+            <button id="tab-actor" class="tab-inactive px-10 py-4 rounded-lg font-cyber text-base tracking-wider transition-all duration-300 uppercase">
+                👤 ACTOR ANALYTICS
+            </button>
+        </div>
+
+        <!-- TAB 1: SYSTEM OVERVIEW -->
+        <div id="content-overview" class="tab-content">
+            <!-- Advanced Filter Panel -->
+            <div class="glass-panel rounded-xl p-8 mb-12">
+                <h3 class="text-2xl font-cyber neon-gradient-text mb-8 uppercase tracking-wider flex items-center">
+                    ⚙️ SYSTEM FILTERS & CONTROLS
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div>
+                        <label class="block text-neon-purple text-sm mb-3 font-bold uppercase tracking-wide">🌐 Platform</label>
+                        <select id="filter-platform" class="cyber-select w-full px-4 py-3 rounded-lg font-medium">
+                            <option value="">⚡ All Platforms</option>
+                            <option value="Netflix">📺 Netflix</option>
+                            <option value="Amazon Prime">🎬 Amazon Prime</option>
+                            <option value="Disney+">🏰 Disney+</option>
+                            <option value="Hulu">📡 Hulu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-neon-purple text-sm mb-3 font-bold uppercase tracking-wide">📁 Content Type</label>
+                        <select id="filter-type" class="cyber-select w-full px-4 py-3 rounded-lg font-medium">
+                            <option value="">⚡ All Types</option>
+                            <option value="Movie">🎥 Movie</option>
+                            <option value="TV Show">📺 TV Show</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-neon-purple text-sm mb-3 font-bold uppercase tracking-wide">📅 Start Date</label>
+                        <input type="date" id="filter-start-date" class="cyber-input w-full px-4 py-3 rounded-lg font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-neon-purple text-sm mb-3 font-bold uppercase tracking-wide">📅 End Date</label>
+                        <input type="date" id="filter-end-date" class="cyber-input w-full px-4 py-3 rounded-lg font-medium">
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button id="apply-filter" class="cyber-button px-12 py-4 rounded-lg font-cyber text-base tracking-wider">
+                        🚀 EXECUTE FILTER SCAN
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Card -->
+            <div class="mb-12">
+                <div class="kpi-card rounded-xl p-10 text-center">
+                    <h3 class="text-3xl font-cyber neon-gradient-text mb-6 uppercase tracking-widest flex justify-center items-center">
+                        📊 TOTAL SYSTEM ENTRIES
+                    </h3>
+                    <div id="total-titles" class="kpi-number text-8xl font-black mt-4">0</div>
+                    <p class="text-neon-cyan/80 mt-4 font-bold uppercase">Active Content Database</p>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+                <!-- Platform Distribution -->
+                <div class="glass-panel rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            🌐 PLATFORM DISTRIBUTION MATRIX
+                        </h3>
+                        <button onclick="downloadChart('chart-platform', 'platform_distribution')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📸 SAVE IMAGE
+                        </button>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-platform"></canvas>
+                    </div>
+                </div>
+
+                <!-- Type Distribution -->
+                <div class="glass-panel rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            📁 CONTENT TYPE ANALYSIS
+                        </h3>
+                        <button onclick="downloadChart('chart-type', 'content_type')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📸 SAVE IMAGE
+                        </button>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-type"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Genres -->
+                <div class="glass-panel rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            🎭 TOP 10 GENRE DOMINANCE
+                        </h3>
+                        <button onclick="downloadChart('chart-genres', 'top_genres')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📸 SAVE IMAGE
+                        </button>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-genres"></canvas>
+                    </div>
+                </div>
+
+                <!-- Rating Distribution -->
+                <div class="glass-panel rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            🔒 RATING CLASSIFICATION
+                        </h3>
+                        <button onclick="downloadChart('chart-ratings', 'rating_distribution')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📸 SAVE IMAGE
+                        </button>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="chart-ratings"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends Chart (Full Width) -->
+            <div class="glass-panel rounded-xl p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                        📈 YEARLY CONTENT EVOLUTION TIMELINE
+                    </h3>
+                    <button onclick="downloadChart('chart-trends', 'yearly_trends')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                        📸 SAVE IMAGE
+                    </button>
+                </div>
+                <div class="relative h-80 w-full">
+                    <canvas id="chart-trends"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- TAB 2: ACTOR ANALYTICS -->
+        <div id="content-actor" class="tab-content hidden">
+            <!-- Actor Search Panel -->
+            <div class="glass-panel rounded-xl p-10 mb-12">
+                <h3 class="text-3xl font-cyber neon-gradient-text mb-8 uppercase tracking-wider flex items-center justify-center">
+                    🎬 ACTOR PROFILE SCANNER
+                </h3>
+                <div class="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-8 items-center">
+                    <input type="text" id="actor-search" placeholder="🔍 Enter actor name for deep scan..." 
+                           class="cyber-input flex-1 px-8 py-4 rounded-lg text-lg font-medium" style="color: #8A99AD">
+                    <button id="search-actor" class="cyber-button px-12 py-4 rounded-lg font-cyber tracking-wider text-lg">
+                        🚀 INITIATE PROFILE SCAN
+                    </button>
+                </div>
+            </div>
+
+            <!-- Actor Profile -->
+            <div id="actor-profile" class="hidden">
+                <!-- Actor Info -->
+                <div class="actor-profile-card rounded-xl p-10 mb-12">
+                    <div class="text-center">
+                        <h2 id="actor-name" class="text-5xl font-cyber neon-gradient-text mb-8 uppercase tracking-widest"></h2>
+                        <div class="inline-flex items-center bg-gradient-to-r from-neon-cyan to-neon-purple rounded-xl p-8 border-2 border-neon-cyan/50">
+                            <span class="text-white font-black text-2xl mr-4">📊 TOTAL WORKS:</span>
+                            <span id="actor-total-works" class="text-white font-black text-4xl">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actor Charts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+                    <!-- Platform Distribution -->
+                    <div class="glass-panel rounded-xl p-8">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                                🌐 PLATFORM PRESENCE
+                            </h3>
+                            <button onclick="downloadChart('actor-chart-platform', 'actor_platform')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                                📸 SAVE IMAGE
+                            </button>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="actor-chart-platform"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Genres -->
+                    <div class="glass-panel rounded-xl p-8">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                                🎭 SPECIALTY GENRES
+                            </h3>
+                            <button onclick="downloadChart('actor-chart-genres', 'actor_genres')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                                📸 SAVE IMAGE
+                            </button>
+                        </div>
+                        <div class="relative h-64 w-full">
+                            <canvas id="actor-chart-genres"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Career Timeline (Full Width) -->
+                <div class="glass-panel rounded-xl p-8 mb-12">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            📈 CAREER EVOLUTION TIMELINE
+                        </h3>
+                        <button onclick="downloadChart('actor-chart-timeline', 'actor_timeline')" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📸 SAVE IMAGE
+                        </button>
+                    </div>
+                    <div class="relative h-80 w-full">
+                        <canvas id="actor-chart-timeline"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Works Table -->
+                <div class="glass-panel rounded-xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-xl font-cyber neon-gradient-text uppercase tracking-wide flex items-center">
+                            🏆 TOP 10 RECENT MASTERWORKS
+                        </h3>
+                        <button onclick="downloadTableAsExcel()" class="cyber-button px-4 py-2 rounded-lg text-sm">
+                            📊 EXPORT EXCEL
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="actor-works-table" class="cyber-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-4 text-left">🎬 Title</th>
+                                    <th class="px-6 py-4 text-left">📁 Type</th>
+                                    <th class="px-6 py-4 text-left">📅 Release Year</th>
+                                    <th class="px-6 py-4 text-left">🌐 Platform</th>
+                                    <th class="px-6 py-4 text-left">🎭 Genres</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="actor-no-results" class="hidden glass-panel rounded-xl p-12 text-center border-2 border-red-500/50">
+                <div class="text-red-400 text-8xl mb-6">⚠️</div>
+                <h3 class="text-4xl font-cyber neon-gradient-text mb-6 uppercase">SCAN FAILED</h3>
+                <p class="text-gray-300 text-xl mb-4">No data entries found for the specified actor profile.</p>
+                <p class="text-neon-purple">Try adjusting search parameters or verify actor name spelling.</p>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50">
+            <div class="text-center">
+                <div class="loading-spinner mx-auto mb-8"></div>
+                <p class="text-neon-cyan font-cyber text-2xl uppercase tracking-widest">
+                    🔄 SCANNING DATA MATRIX...
+                </p>
+                <div class="mt-4 flex justify-center space-x-2">
+                    <div class="w-2 h-2 bg-neon-cyan rounded-full animate-bounce"></div>
+                    <div class="w-2 h-2 bg-neon-purple rounded-full animate-bounce" style="animation-delay: 0.1s;"></div>
+                    <div class="w-2 h-2 bg-accent-blue rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="error-modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center z-50">
+            <div class="glass-panel rounded-xl p-12 max-w-md mx-4 border-2 border-neon-purple/50 shadow-2xl" style="box-shadow: 0 0 30px rgba(208, 66, 255, 0.4);">
+                <div class="text-center">
+                    <div class="text-neon-purple text-8xl mb-8 animate-pulse">⚡</div>
+                    <h3 class="text-3xl font-cyber neon-gradient-text mb-8 uppercase">SYSTEM ERROR</h3>
+                    <p id="error-message" class="text-neon-cyan/80 mb-10 text-lg leading-relaxed font-medium"></p>
+                    <button id="close-error" class="cyber-button px-8 py-3 rounded-lg font-cyber tracking-wider">
+                        🔄 RETRY CONNECTION
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Chart.js Dark Mode Global Configuration
+        Chart.defaults.color = '#ffffff';  // Force white color for all text
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.backgroundColor = 'rgba(0, 243, 255, 0.1)';
+
+        // Global variables
+        let chartInstances = {};
+        let currentTab = 'overview';
+        const API_BASE = 'http://localhost:5000/api';
+        // Cyberpunk Neon Color Palettes
+        const neonColors = {
+            cyan: '#00f3ff',
+            pink: '#ff007f', 
+            purple: '#9d4edd',
+            yellow: '#39ff14'
+        };
+
+        const chartColorPalette = [
+            'rgba(0, 243, 255, 0.9)',   // Electric Cyan
+            'rgba(255, 0, 127, 0.9)',   // Neon Pink
+            'rgba(157, 78, 221, 0.9)',  // Neon Purple
+            'rgba(57, 255, 20, 0.9)',   // Neon Yellow
+            'rgba(255, 20, 147, 0.9)',  // Deep Pink
+            'rgba(0, 255, 255, 0.9)',   // Aqua
+            'rgba(255, 105, 180, 0.9)', // Hot Pink
+            'rgba(138, 43, 226, 0.9)',  // Blue Violet
+            'rgba(75, 0, 130, 0.9)',    // Indigo
+            'rgba(148, 0, 211, 0.9)'    // Dark Violet
+        ];
+
+        const borderColorPalette = [
+            '#00f3ff', '#ff007f', '#9d4edd', '#39ff14', '#ff1493', 
+            '#00ffff', '#ff69b4', '#8a2be2', '#4b0082', '#9400d3'
+        ];
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            loadOverviewData();
+            setupEventListeners();
+            console.log('🚀 Cyberpunk Dashboard initialized successfully!');
+        });
+
+        // Tab Management System
+        function initializeTabs() {
+            const tabOverview = document.getElementById('tab-overview');
+            const tabActor = document.getElementById('tab-actor');
+            const contentOverview = document.getElementById('content-overview');
+            const contentActor = document.getElementById('content-actor');
+
+            tabOverview.addEventListener('click', () => {
+                switchTab('overview', tabOverview, tabActor, contentOverview, contentActor);
+            });
+
+            tabActor.addEventListener('click', () => {
+                switchTab('actor', tabActor, tabOverview, contentActor, contentOverview);
+            });
+        }
+
+        function switchTab(tab, activeBtn, inactiveBtn, activeContent, inactiveContent) {
+            if (currentTab === tab) return;
+            
+            currentTab = tab;
+            
+            // Update button styles with cyberpunk animations
+            activeBtn.className = 'tab-active px-10 py-4 rounded-lg font-cyber text-base tracking-wider transition-all duration-300 uppercase';
+            inactiveBtn.className = 'tab-inactive px-10 py-4 rounded-lg font-cyber text-base tracking-wider transition-all duration-300 uppercase';
+            
+            // Smooth content transition
+            activeContent.classList.remove('hidden');
+            inactiveContent.classList.add('hidden');
+            
+            console.log(`🔄 Switched to ${tab.toUpperCase()} tab`);
+        }
+
+        // Event Listeners Setup
+        function setupEventListeners() {
+            document.getElementById('apply-filter').addEventListener('click', loadOverviewData);
+            document.getElementById('search-actor').addEventListener('click', searchActor);
+            document.getElementById('actor-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchActor();
+            });
+            document.getElementById('close-error').addEventListener('click', hideError);
+        }
+
+        // Utility Functions
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-modal').classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error-modal').classList.add('hidden');
+        }
+
+        function destroyChart(chartId) {
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+                delete chartInstances[chartId];
+            }
+        }
+
+        // Chart Creation Functions with Cyberpunk Styling
+        function createHorizontalBarChart(canvasId, data, title) {
+            destroyChart(canvasId);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: title,
+                        data: data.values,
+                        backgroundColor: chartColorPalette.slice(0, data.labels.length),
+                        borderColor: borderColorPalette.slice(0, data.labels.length),
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            color: '#39ff14',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value) => value
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        function createVerticalBarChart(canvasId, data, title) {
+            destroyChart(canvasId);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: title,
+                        data: data.values,
+                        backgroundColor: chartColorPalette.slice(0, data.labels.length),
+                        borderColor: borderColorPalette.slice(0, data.labels.length),
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#39ff14',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value) => value
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { 
+                                color: '#e2e8f0',
+                                maxRotation: 45,
+                                font: { weight: 'bold' }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        function createDoughnutChart(canvasId, data, title) {
+            destroyChart(canvasId);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            // Special cyberpunk colors for pie chart - contrasting neon colors
+            const pieColors = ['rgba(0, 243, 255, 0.95)', 'rgba(255, 0, 127, 0.95)', 'rgba(57, 255, 20, 0.95)', 'rgba(157, 78, 221, 0.95)'];
+            const pieBorders = ['#00f3ff', '#ff007f', '#39ff14', '#9d4edd'];
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.values,
+                        backgroundColor: pieColors.slice(0, data.labels.length),
+                        borderColor: pieBorders.slice(0, data.labels.length),
+                        borderWidth: 4,
+                        hoverBorderWidth: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#ffffff',
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold',
+                                    family: 'Orbitron'
+                                },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        return data.labels.map((label, i) => {
+                                            const value = data.datasets[0].data[i];
+                                            const percentage = ((value / total) * 100).toFixed(1);
+                                            return {
+                                                text: `${label}: ${percentage}%`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].borderColor[i],
+                                                fontColor: '#ffffff',
+                                                lineWidth: 2,
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'valueLabels',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const data = chart.data;
+                        
+                        ctx.save();
+                        ctx.font = 'bold 18px Orbitron';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        const meta = chart.getDatasetMeta(0);
+                        meta.data.forEach((arc, index) => {
+                            const value = data.datasets[0].data[index];
+                            
+                            // Hiển thị số lượng trên biểu đồ
+                            const centerAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
+                            const radius = (arc.innerRadius + arc.outerRadius) / 2;
+                            const x = arc.x + Math.cos(centerAngle) * radius * 0.8;
+                            const y = arc.y + Math.sin(centerAngle) * radius * 0.8;
+                            
+                            // Số màu xanh neon như PLATFORM DISTRIBUTION
+                            ctx.fillStyle = '#39ff14';
+                            ctx.strokeStyle = '#000000';
+                            ctx.lineWidth = 3;
+                            
+                            // Vẽ outline đen để text nổi bật
+                            ctx.strokeText(value.toLocaleString(), x, y);
+                            // Vẽ text xanh neon
+                            ctx.fillText(value.toLocaleString(), x, y);
+                        });
+                        
+                        ctx.restore();
+                    }
+                }, {
+                    id: 'whiteLegendText',
+                    afterDraw: (chart) => {
+                        const legend = chart.legend;
+                        if (!legend || !legend.legendItems) return;
+                        
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        
+                        // Force render legend text màu trắng
+                        legend.legendItems.forEach((item, i) => {
+                            const x = item.left;
+                            const y = item.top;
+                            
+                            if (item.text) {
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = 'bold 14px Orbitron';
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = 'middle';
+                                
+                                // Xóa text cũ bằng cách vẽ lại background
+                                const metrics = ctx.measureText(item.text);
+                                ctx.clearRect(x - 5, y - 10, metrics.width + 10, 20);
+                                
+                                // Vẽ text trắng
+                                ctx.fillText(item.text, x, y);
+                            }
+                        });
+                        
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        function createLineChart(canvasId, data, title) {
+            destroyChart(canvasId);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: title,
+                        data: data.values,
+                        borderColor: '#00f3ff',
+                        backgroundColor: 'rgba(0, 243, 255, 0.2)',
+                        borderWidth: 4,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#00f3ff',
+                        pointBorderColor: '#ff007f',
+                        pointBorderWidth: 3,
+                        pointRadius: 7,
+                        pointHoverRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#39ff14',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value) => value
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: '#e2e8f0', font: { weight: 'bold' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+        // API Functions
+        async function loadOverviewData() {
+            showLoading();
+            console.log('📊 Loading overview data...');
+
+            try {
+                const params = new URLSearchParams();
+                
+                const platform = document.getElementById('filter-platform').value;
+                const type = document.getElementById('filter-type').value;
+                const startDate = document.getElementById('filter-start-date').value;
+                const endDate = document.getElementById('filter-end-date').value;
+                // Validate ngày bắt đầu không được lớn hơn ngày kết thúc
+                if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                    hideLoading();
+                    alert('⚠️ Lỗi: Ngày bắt đầu (Start Date) không thể lớn hơn ngày kết thúc (End Date)!');
+                    return;
+                }
+                
+                if (platform) params.append('platform', platform);
+                if (type) params.append('type', type);
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+
+                const response = await fetch(`${API_BASE}/dashboard/overview?${params}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    console.log('✅ Overview data loaded successfully!', data);
+                    
+                    // Update KPI with number animation
+                    animateNumber('total-titles', data.total_titles);
+
+                    // Create charts with cyberpunk styling
+                    createHorizontalBarChart('chart-platform', data.charts.platform_distribution, 'Platform Distribution');
+                    createDoughnutChart('chart-type', data.charts.type_distribution, 'Content Type');
+                    createVerticalBarChart('chart-genres', data.charts.top_genres, 'Top Genres');
+                    createVerticalBarChart('chart-ratings', data.charts.rating_distribution, 'Rating Distribution');
+                    createLineChart('chart-trends', data.charts.trends, 'Yearly Trends');
+                } else {
+                    throw new Error(data.message || 'Failed to load overview data');
+                }
+            } catch (error) {
+                console.error('❌ Error loading overview data:', error);
+                showError(`Network error while loading data: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function searchActor() {
+            const actorName = document.getElementById('actor-search').value.trim();
+            
+            if (!actorName) {
+                showError('Please enter an actor name to scan');
+                return;
+            }
+
+            showLoading();
+            console.log(`🔍 Searching for actor: ${actorName}`);
+
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/actor?name=${encodeURIComponent(actorName)}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.total_works > 0) {
+                    console.log('✅ Actor data found!', data);
+                    displayActorData(data);
+                } else {
+                    console.log('⚠️ No actor data found');
+                    showNoResults();
+                }
+            } catch (error) {
+                console.error('❌ Error searching actor:', error);
+                showError(`Network error while searching actor: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayActorData(data) {
+            // Hide no results, show profile
+            document.getElementById('actor-no-results').classList.add('hidden');
+            document.getElementById('actor-profile').classList.remove('hidden');
+
+            // Store current actor data globally
+            currentActorData = data;
+
+            // Update actor info with animation
+            document.getElementById('actor-name').textContent = data.actor.toUpperCase();
+            animateNumber('actor-total-works', data.total_works);
+
+            // Create charts with cyberpunk styling
+            createVerticalBarChart('actor-chart-platform', data.charts.platform_distribution, 'Platform Presence');
+            createHorizontalBarChart('actor-chart-genres', data.charts.top_genres, 'Top Genres');
+            createLineChart('actor-chart-timeline', data.charts.career_timeline, 'Career Timeline');
+
+            // Populate table with enhanced cyberpunk styling
+            const tbody = document.querySelector('#actor-works-table tbody');
+            tbody.innerHTML = '';
+            
+            data.recent_works.forEach((work, index) => {
+                const row = tbody.insertRow();
+                row.className = 'transition-all duration-300';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-neon-cyan">${work.title}</td>
+                    <td class="px-6 py-4 text-neon-purple">${work.type}</td>
+                    <td class="px-6 py-4 text-accent-blue font-bold">${work.release_year}</td>
+                    <td class="px-6 py-4 text-neon-cyan font-semibold">${work.platform}</td>
+                    <td class="px-6 py-4 text-sm text-gray-300">${work.listed_in || 'N/A'}</td>
+                `;
+            });
+
+            console.log(`✅ Actor profile displayed for: ${data.actor}`);
+        }
+
+        function showNoResults() {
+            document.getElementById('actor-profile').classList.add('hidden');
+            document.getElementById('actor-no-results').classList.remove('hidden');
+        }
+
+        // Number Animation for KPIs
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            const duration = 1500;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        }
+
+        // Console styling for cyberpunk theme
+        console.log('%c🚀 Media Dashboard', 'color: #00f3ff; font-size: 20px; font-weight: bold;');
+        console.log('%cAdvanced Analytics Terminal v4.0 - ONLINE', 'color: #39ff14; font-size: 14px; font-weight: bold;');
+
+        // Download Chart as Image
+        function downloadChart(chartId, filename) {
+            const canvas = document.getElementById(chartId);
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `${filename}_chart.png`;
+            link.href = url;
+            link.click();
+            console.log(`📸 Chart ${filename} downloaded successfully!`);
+        }
+
+        // Download Table as Excel
+        function downloadTableAsExcel() {
+            const actorName = document.getElementById('actor-name').textContent;
+            const table = document.getElementById('actor-works-table');
+            const ws = XLSX.utils.table_to_sheet(table);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Recent Works");
+            XLSX.writeFile(wb, `${actorName}_recent_works.xlsx`);
+            console.log(`📊 Excel file for ${actorName} downloaded successfully!`);
+        }
+
+        // Global variable to store recent works data
+        let currentActorData = null;
+    </script>
+</body>
+</html>
